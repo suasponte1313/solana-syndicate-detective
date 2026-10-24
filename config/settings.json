@@ -1,0 +1,24 @@
+{
+  "system_title": "SOLANA SYNDICATE DETECTIVE",
+  "version": "1.0.0",
+  "github_repository": "https://github.com/larrybrain444-star/solana-syndicate-detective",
+  "supabase": {
+    "url": "https://xrdwirckyettustushqc.supabase.co",
+    "project_ref": "xrdwirckyettustushqc",
+    "auth_user": "larrybrain444@gmail.com"
+  },
+  "vercel": {
+    "deployment_ready": true,
+    "framework": null,
+    "buildCommand": null
+  },
+  "investigation": {
+    "auto_trace_depth": 3,
+    "minimum_threat_win_rate": 80.0,
+    "flagged_datacenters": [
+      "Frankfurt (Hetzner FSN1)",
+      "Vilnius (Cherry Servers)",
+      "Helsinki (Equinix)"
+    ]
+  }
+}

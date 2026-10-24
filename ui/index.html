@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕵️ SOLANA SYNDICATE DETECTIVE — The Crime Board</title>
+  <style>
+    :root {
+      --bg: #030712;
+      --board-bg: #090d16;
+      --card-bg: #0f172a;
+      --border: #334155;
+      --red-yarn: #ef4444;
+      --gold: #f59e0b;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --purple: #8b5cf6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 18px;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 1300px; margin: 0 auto; }
+
+    /* HEADER */
+    .dossier-header {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 10px;
+      padding: 16px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 25px rgba(239, 68, 68, 0.12);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px; font-size: 0.72rem;
+      font-family: var(--font-mono); font-weight: bold;
+    }
+    .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--red-yarn); border: 1px solid var(--red-yarn); }
+    .badge-gold { background: rgba(245, 158, 11, 0.2); color: var(--gold); border: 1px solid var(--gold); }
+    .badge-cyan { background: rgba(6, 182, 212, 0.2); color: var(--cyan); border: 1px solid var(--cyan); }
+
+    /* INVESTIGATION SCANNER BAR */
+    .scanner-bar {
+      background: #0b1329;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .scanner-input {
+      flex: 1; min-width: 280px; background: #020617;
+      border: 1px solid #1e293b; border-radius: 6px;
+      padding: 10px 14px; color: #fff; font-family: var(--font-mono);
+      font-size: 0.82rem; outline: none;
+    }
+    .scanner-input:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.3); }
+
+    .btn {
+      padding: 10px 16px; border-radius: 6px; font-size: 0.78rem;
+      font-weight: bold; font-family: var(--font-mono); cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .btn-search { background: var(--cyan); color: #000; }
+    .btn-search:hover { filter: brightness(1.15); box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+    .btn-supabase { background: rgba(16, 185, 129, 0.2); color: var(--green); border-color: var(--green); }
+    .btn-vercel { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: #475569; }
+
+    /* CRIME BOARD LAYOUT */
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .syndicate-card {
+      background: var(--card-bg);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    .syndicate-card::before {
+      content: "📌";
+      position: absolute; top: -10px; right: 14px;
+      font-size: 1.2rem;
+    }
+    .syndicate-title { font-size: 1rem; font-weight: bold; color: #fff; margin-bottom: 4px; }
+    .syndicate-meta { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 10px; }
+
+    /* SUSPECTS TABLE */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.75rem; }
+    th { text-align: left; padding: 8px 10px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* DOSSIER MODAL */
+    .modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85); z-index: 10000;
+      align-items: center; justify-content: center; backdrop-filter: blur(6px);
+    }
+    .modal-content {
+      background: #0b1329; border: 2px solid var(--red-yarn);
+      border-radius: 10px; width: 92%; max-width: 750px;
+      max-height: 88vh; overflow-y: auto; padding: 22px;
+      box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+      font-family: var(--font-mono);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="dossier-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 2rem;">🕵️‍♂️</span>
+        <div>
+          <div style="font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; color: #fff;">
+            SOLANA SYNDICATE DETECTIVE — CRIME BOARD
+          </div>
+          <div style="font-size: 0.72rem; color: var(--gold); font-family: var(--font-mono);">
+            CASE #884-MEV: ON-CHAIN CARTELS, GENESIS LINEAGE &amp; WHALE UNRAVELER
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <span class="badge badge-red">CLASSIFIED DOSSIER</span>
+        <span class="badge badge-gold">SUPABASE + GITHUB + VERCEL</span>
+        <span class="badge" style="background: rgba(51, 65, 85, 0.3); color: #94a3b8; border: 1px solid #334155;">🔇 SILENT CONSOLE</span>
+      </div>
+    </div>
+
+    <!-- INVESTIGATION SCANNER BAR -->
+    <div class="scanner-bar">
+      <span style="font-size: 1.1rem;">🔎</span>
+      <input type="text" id="wallet-input" class="scanner-input" placeholder="Paste target Solana wallet (e.g. 6WuGEm... or Bpkb7a...)..." value="6WuGEmRrccdvN7aUsmo99u7nZxGAsM6pTbJUBVRoAETH">
+      <button class="btn btn-search" onclick="unravelWallet()">
+        <span>⚡</span> UNRAVEL SUSPECT
+      </button>
+      <button class="btn btn-supabase" onclick="syncSupabase()">
+        <span>☁️</span> SYNC TO SUPABASE
+      </button>
+      <button class="btn btn-vercel" onclick="viewSqlSchema()">
+        <span>📄</span> VIEW SUPABASE SQL
+      </button>
+    </div>
+
+    <!-- THE MOVIE CRIME BOARD (SYNDICATE CARTELS) -->
+    <h3 style="font-size: 0.95rem; color: var(--cyan); font-family: var(--font-mono); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+      <span>🕸️</span> IDENTIFIED SOLANA CRIME SYNDICATES (THE MASTERMINDS)
+    </h3>
+    <div class="board-grid" id="syndicate-grid">
+      <!-- Populated via JavaScript -->
+    </div>
+
+    <!-- MOST WANTED LIST (TOP SUSPECTS) -->
+    <div class="panel">
+      <div class="panel-header">
+        <div style="font-weight: bold; font-family: var(--font-mono); color: var(--gold); font-size: 0.9rem;">
+          🎯 MOST WANTED PREY &amp; SIBLING DRONES (THE DETECTIVE RAP SHEET)
+        </div>
+        <span class="badge badge-cyan" id="suspects-count-badge">7 SUSPECTS INDEXED</span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Target &amp; Alias</th>
+              <th>Syndicate / Cartel</th>
+              <th>Genesis Father Vault</th>
+              <th>Win / Extracted</th>
+              <th>Copy-Bots</th>
+              <th>Threat Level</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="suspects-table-body">
+            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">INITIALIZING DETECTIVE EVIDENCE VAULT...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SUSPECT RAP SHEET MODAL -->
+  <div id="dossier-modal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--red-yarn); padding-bottom: 12px; margin-bottom: 16px;">
+        <div>
+          <div style="color: var(--red-yarn); font-size: 0.7rem; font-weight: bold; letter-spacing: 2px;">CONFIDENTIAL INVESTIGATION DOSSIER</div>
+          <strong id="modal-alias" style="font-size: 1.2rem; color: #fff;">TARGET NAME</strong>
+        </div>
+        <button onclick="closeModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">✕</button>
+      </div>
+
+      <div id="modal-body">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    async function loadBoard() {
+      try {
+        const res = await fetch(`${API_BASE}/api/board`);
+        const data = await res.json();
+        renderSyndicates(data.syndicates);
+        renderSuspects(data.top_wanted);
+      } catch (e) {}
+    }
+
+    function renderSyndicates(syndicates) {
+      const container = document.getElementById('syndicate-grid');
+      if (!syndicates || syndicates.length === 0) return;
+      let html = "";
+      syndicates.forEach(s => {
+        const threatColor = s.threat_level === "CRITICAL" ? "var(--red-yarn)" : (s.threat_level === "HIGH" ? "var(--gold)" : "var(--cyan)");
+        html += `
+          <div class="syndicate-card" style="border-top: 3px solid ${threatColor};">
+            <div class="syndicate-title">${s.name}</div>
+            <div class="syndicate-meta">ID: ${s.syndicate_id} &bull; ${s.member_count} Members</div>
+            <div style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 6px;">
+              <strong>Mastermind Vault:</strong> <span style="color: var(--cyan);">${s.mastermind_vault}</span>
+            </div>
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px;">
+              <strong>Datacenter:</strong> ${s.datacenter_location}
+            </div>
+            <div style="font-size: 0.7rem; color: var(--gold); background: rgba(245, 158, 11, 0.1); border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 4px; padding: 6px; margin-bottom: 8px;">
+              <strong>M.O.:</strong> ${s.primary_mo}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-family: var(--font-mono);">
+              <span style="color: var(--green); font-weight: bold;">+${s.total_extracted_sol.toFixed(1)} SOL Extracted</span>
+              <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: ${threatColor}; border: 1px solid ${threatColor};">${s.threat_level}</span>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderSuspects(suspects) {
+      const tbody = document.getElementById('suspects-table-body');
+      if (!suspects || suspects.length === 0) return;
+      let html = "";
+      suspects.forEach(s => {
+        const threatBadge = s.threat_level === "CRITICAL" 
+          ? `<span class="badge badge-red">CRITICAL</span>`
+          : (s.threat_level === "HIGH" 
+            ? `<span class="badge badge-gold">HIGH</span>` 
+            : `<span class="badge badge-cyan">${s.threat_level}</span>`);
+
+        html += `
+          <tr>
+            <td>
+              <strong style="color: #fff; font-size: 0.82rem;">${s.alias}</strong>
+              <div style="color: var(--text-muted); font-size: 0.68rem;">${s.address.substring(0, 14)}...</div>
+            </td>
+            <td><strong style="color: var(--cyan);">${s.syndicate_id}</strong></td>
+            <td><span style="color: var(--gold);">${s.genesis_parent.substring(0, 16)}...</span></td>
+            <td>
+              <div style="color: var(--green); font-weight: bold;">${s.win_rate}% Win</div>
+              <div style="font-size: 0.68rem; color: var(--text-muted);">+${s.extracted_sol} SOL</div>
+            </td>
+            <td><strong style="color: var(--purple);">${s.copy_bot_count} bots</strong></td>
+            <td>${threatBadge}</td>
+            <td>
+              <button class="btn btn-search" style="padding: 4px 8px; font-size: 0.68rem;" onclick="inspectSuspect('${s.address}')">
+                🔍 UNRAVEL
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+      document.getElementById('suspects-count-badge').innerText = `${suspects.length} SUSPECTS INDEXED`;
+    }
+
+    async function unravelWallet() {
+      const input = document.getElementById('wallet-input');
+      const addr = input.value.trim();
+      if (!addr) return alert("Please enter a Solana wallet address!");
+      inspectSuspect(addr);
+    }
+
+    async function inspectSuspect(addr) {
+      try {
+        const res = await fetch(`${API_BASE}/api/unravel?address=${addr}`);
+        const d = await res.json();
+        
+        document.getElementById('modal-alias').innerText = `${d.suspect.alias} (${d.suspect.address.substring(0, 10)}...)`;
+        
+        const siblingsHtml = (d.sibling_drones || []).map(s => `
+          <div style="background: rgba(30, 41, 59, 0.5); padding: 6px 10px; border-radius: 4px; font-size: 0.72rem; margin-bottom: 4px; display: flex; justify-content: space-between;">
+            <span>🤖 <strong>${s.alias}</strong> (${s.address.substring(0, 8)}...)</span>
+            <span style="color: var(--green);">${s.win_rate}% Win</span>
+          </div>
+        `).join('') || '<div style="color: var(--text-muted); font-size: 0.72rem;">No sibling drones detected (Standalone operator).</div>';
+
+        document.getElementById('modal-body').innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; font-size: 0.75rem;">
+            <div style="background: rgba(15, 23, 42, 0.8); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+              <div style="color: var(--text-muted); font-size: 0.68rem;">GENESIS FATHER VAULT</div>
+              <strong style="color: var(--cyan);">${d.genesis_lineage.funding_father}</strong>
+              <div style="color: var(--text-muted); font-size: 0.65rem; margin-top: 2px;">Initial Funding: ${d.genesis_lineage.genesis_amount_sol} SOL</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.8); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+              <div style="color: var(--text-muted); font-size: 0.68rem;">SYNDICATE AFFILIATION</div>
+              <strong style="color: var(--gold);">${d.syndicate.name}</strong>
+              <div style="color: var(--text-muted); font-size: 0.65rem; margin-top: 2px;">Datacenter: ${d.syndicate.datacenter_location}</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: var(--gold); font-size: 0.75rem; font-weight: bold; margin-bottom: 4px;">🕸️ IDENTIFIED SIBLING DRONES FUNDED BY SAME FATHER:</div>
+            ${siblingsHtml}
+          </div>
+
+          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red-yarn); border-radius: 6px; padding: 12px; margin-bottom: 14px; font-size: 0.75rem;">
+            <strong style="color: var(--red-yarn);">🎯 DETECTIVE COUNTER-STRATEGY:</strong>
+            <div style="color: #cbd5e1; margin-top: 4px; line-height: 1.4;">
+              • <strong>Style:</strong> ${d.suspect.play_style}<br>
+              • <strong>Vulnerability:</strong> Because this wallet triggers <strong>${d.suspect.copy_bot_count} automated copy-bots</strong>, you can fire a Block 0 Co-Snipe right behind him, let his copy-bots pump the curve to 20%, and auto-dump with 8S Blitz!
+            </div>
+          </div>
+
+          <button class="btn btn-search" style="width: 100%; justify-content: center;" onclick="closeModal()">
+            CLOSE CASE FILE
+          </button>
+        `;
+
+        document.getElementById('dossier-modal').style.display = 'flex';
+      } catch (e) {
+        alert("Interrogation error: " + e);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('dossier-modal').style.display = 'none';
+    }
+
+    async function syncSupabase() {
+      try {
+        const res = await fetch(`${API_BASE}/api/sync_supabase`, { method: 'POST' });
+        const d = await res.json();
+        alert(`☁️ SUPABASE CLOUD VAULT SYNC:\nStatus: ${d.status}\nMessage: ${d.message || 'Syndicates and suspects synced to cloud ledger.'}`);
+      } catch (e) {
+        alert("Sync error: " + e);
+      }
+    }
+
+    async function viewSqlSchema() {
+      try {
+        const res = await fetch(`${API_BASE}/api/sql`);
+        const sql = await res.text();
+        alert(`📄 SUPABASE POSTGRES MIGRATION SCHEMA (1-CLICK DDL):\n\n${sql.substring(0, 500)}...\n\n(Full SQL script available at /api/sql)`);
+      } catch (e) {}
+    }
+
+    loadBoard();
+  </script>
+</body>
+</html>
